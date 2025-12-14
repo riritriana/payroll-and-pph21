@@ -9,6 +9,5 @@ public class PayrollAndPph21Application {
 	public static void main(String[] args) {
 		SpringApplication.run(PayrollAndPph21Application.class, args);
 	}
-
 	
 }

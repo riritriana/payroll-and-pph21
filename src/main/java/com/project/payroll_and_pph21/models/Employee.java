@@ -40,7 +40,7 @@ public class Employee {
     @Pattern(regexp = "^[A-Z].{0,29}$", message = "Jabatan harus dimulai dengan huruf kapital dan maksimal 30 karakter")
     private String positionName;
 
-    @DecimalMin(value = "6000000", message = "Gaji pokok harus minimal 6 juta")
+    @DecimalMin(value = "4500000", message = "Gaji pokok harus minimal 4,5 juta")
     @Max(value = 999999999, message = "Gaji pokok tidak boleh lebih dari 100 juta")
     @Column(precision = 10, scale=0)
     private BigDecimal basicSalary;

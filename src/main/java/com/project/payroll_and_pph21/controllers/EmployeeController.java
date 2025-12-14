@@ -21,15 +21,12 @@ import jakarta.validation.Valid;
 public class EmployeeController {
     @Autowired
     private EmployeeService employeeService;
-
-
     @GetMapping("/employee")
     public String employee(Model model) {
         List<Employee> employee = employeeService.getAllEmployees();
         model.addAttribute("employee", employee);
         return "/employee/employee";
     }
-
     @GetMapping("/add-employee")
     public String addEmployee(Model model) {
         model.addAttribute("employee", new Employee());
@@ -43,7 +40,6 @@ public String saveEmployee(@Valid Employee employee, BindingResult result, Model
     if (result.hasErrors()) {
         return "/employee/add-employee";
     }
-
     try {
         // Menyimpan karyawan melalui service
         employeeService.save(employee);
@@ -54,7 +50,6 @@ public String saveEmployee(@Valid Employee employee, BindingResult result, Model
         return "redirect:/add-employee";
     }
 }
-
     @GetMapping("/delete-employee/{id}")
     public String deleteEmployee(@PathVariable(value = "id") Long id, Model model) {
         employeeService.delete(id);
