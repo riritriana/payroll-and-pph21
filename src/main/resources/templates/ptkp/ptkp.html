@@ -31,29 +31,84 @@
         </div>
       </div>
     </div>
-    <script>
-      const ptpkSelect = document.getElementById("ptpk");
-      ptpkSelect.value = "Tk/0";
-      ptpkSelect.addEventListener("change", function () {
-        const rate = document.getElementById("rate-ptkp");
-        if(ptpkSelect.value == "Tk/0"){
-            rate.value = 54000000;
-        } else if (ptpkSelect.value == "Tk/1") {
-            rate.value = 58500000;
-        } else if (ptpkSelect.value == "Tk/2") {
-            rate.value = 63000000;
-        } else if (ptpkSelect.value == "Tk/3") {
-            rate.value = 57500000;
-        } else if (ptpkSelect.value == "K/0") {
-            rate.value = 58500000;
-        } else if (ptpkSelect.value == "K/1") {
-            rate.value = 63000000;
-        } else if (ptpkSelect.value == "K/2") {
-            rate.value = 67500000;
-        } else if (ptpkSelect.value == "K/3") {
-            rate.value = 72000000;
+<script >
+    ///////////////////////////PERHITUNGAN PTKP //////////////////////
+    const ptkp = document.getElementById("ptkp");
+    const nominalPtkp = document.getElementById("nominalPtkp");
+    const pkp = document.getElementById("pkp");
+    const taxBracket = document.getElementById("tax-bracket");
+    const netIncomeYearly = document.getElementById("netIncomeYearly");
+    const pph21Monthly = document.getElementById("pph21Monthly");
+    // AMBIL STATUS NPWP
+    const npwpStatusInput = document.getElementById("npwpStatus"); 
+
+    // Fungsi Utama Perhitungan dan Penyesuaian PPh 21
+    function updateTaxCalculation() {
+        // 1. Hitung PKP
+        let currentPkp = netIncomeYearly.value - nominalPtkp.value;
+        pkp.value = currentPkp; 
+        
+        // 2. Hitung PPh 21 Terutang Setahun (Base 100%)
+        let totalTax = calculateTax(currentPkp);
+
+        // 3. SESUAIKAN PPH 21 BERDASARKAN STATUS NPWP (+20%)
+        const isNonNpwp = npwpStatusInput.value.toLowerCase() === 'donthave'; 
+        
+        if (isNonNpwp) {
+            totalTax = totalTax * 1.20; // Kenaikan 20%
         }
-      }); 
-    </script>
+        
+        // 4. Update Field di Form
+        taxBracket.value = Math.round(totalTax); // Bulatkan PPh 21 Setahun
+        pph21Monthly.value = Math.round(totalTax / 12); // Bulatkan PPh 21 Sebulan
+    }
+
+
+    // Inisialisasi PTKP
+    nominalPtkp.value = 54000000;
+
+    // Panggil fungsi utama saat inisialisasi
+    updateTaxCalculation(); 
+    
+    const ptkps = JSON.parse(ptkp.dataset.ptkps);
+    ptkp.addEventListener("change", (e) => {
+        ptkps.forEach(p => {
+            if (e.target.value == p.status) {
+                nominalPtkp.value = p.taxRatePtkp;
+            }
+        });
+        // Panggil fungsi utama saat PTKP berubah
+        updateTaxCalculation();
+    });
+
+    function calculateTax(pkpValue) {
+        let limaPersen = 0;
+        let limaBelasPersen = 0;
+        let duaPuluhLimaPersen = 0;
+        let tigaPuluhPersen = 0;
+
+        if (pkpValue > 0) {
+            if (pkpValue <= 60000000) {
+                limaPersen = pkpValue * 0.05;
+            } else {
+                limaPersen = 60000000 * 0.05;
+                if (pkpValue <= 250000000) {
+                    limaBelasPersen = (pkpValue - 60000000) * 0.15;
+                } else {
+                    limaBelasPersen = (250000000 - 60000000) * 0.15;
+                    if (pkpValue <= 500000000) {
+                        duaPuluhLimaPersen = (pkpValue - 250000000) * 0.25;
+                    } else {
+                        duaPuluhLimaPersen = (500000000 - 250000000) * 0.25;
+                        tigaPuluhPersen = (pkpValue - 500000000) * 0.30;
+                    }
+                }
+            }
+        }
+        return (
+            limaPersen + limaBelasPersen + duaPuluhLimaPersen + tigaPuluhPersen
+        );
+    }
+</script>
   </body>
 </html>
