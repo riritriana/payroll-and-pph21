@@ -13,12 +13,13 @@ import com.project.payroll_and_pph21.repositories.PayrollRepository;
 
 @Service
 public class PayrollService {
+    private static final BigDecimal MAX_POSITION_COST = new BigDecimal("500000");
     @Autowired
     private PayrollRepository payrollRepository;
     @Autowired
     private EmployeeRepository employeeRepository;
 
-    public Payroll newPayroll(Long id) {
+public Payroll newPayroll(Long id) {
         Payroll payroll = new Payroll();
 
         payroll.setEmployee(employeeRepository.findEmployeeById(id));
@@ -45,9 +46,27 @@ public class PayrollService {
             .add(jkkPremium) // JKK Premium 1.27%
             .setScale(0, RoundingMode.HALF_UP); // Pembulatan hasil akhir
 
-        // Menghitung Position Cost dan Net Income Monthly dengan pembulatan yang benar
-        BigDecimal positionCost = grossIncome.multiply(BigDecimal.valueOf(0.05))
+        // START: Bagian yang diubah untuk menghitung Position Cost dengan batas maksimum
+        
+        // 1. Hitung 5% dari Gross Income (Penghasilan Bruto)
+        BigDecimal calculatedPositionCost = grossIncome
+            .multiply(BigDecimal.valueOf(0.05))
             .setScale(0, RoundingMode.HALF_UP);
+
+        // 2. Tentukan Position Cost (Biaya Jabatan), maksimum Rp500.000
+        BigDecimal positionCost;
+        
+        if (calculatedPositionCost.compareTo(MAX_POSITION_COST) > 0) {
+            // Jika hasil perhitungan > 500.000, gunakan 500.000
+            positionCost = MAX_POSITION_COST;
+        } else {
+            // Jika tidak, gunakan hasil perhitungan 5%
+            positionCost = calculatedPositionCost;
+        }
+        
+        // END: Bagian yang diubah
+
+        // Menghitung Net Income Monthly: Gross Income - (Position Cost + JHT Premium)
         BigDecimal netIncomeMonthly = grossIncome.subtract(positionCost.add(jhtPremium))
             .setScale(0, RoundingMode.HALF_UP);
 
@@ -66,9 +85,7 @@ public class PayrollService {
         payroll.setPositionCost(positionCost);
 
         return payroll;
-    }
-
-    public void saveNewPayroll(Payroll payroll, String name) {
+    }    public void saveNewPayroll(Payroll payroll, String name) {
         payroll.setEmployee(employeeRepository.findEmployeeByname(name));
         payrollRepository.save(payroll);
     }
